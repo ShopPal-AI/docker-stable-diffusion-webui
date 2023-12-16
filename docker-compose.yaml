@@ -39,7 +39,7 @@ services:
       - /etc/group:/etc/group:ro
       - ./config/rclone:/etc/rclone
       # Workspace
-      - ./workspace:${WORKSPACE:-/workspace/}:rshared
+      - ${WORKSPACE_HOST:-./workspace}:${WORKSPACE:-/workspace/}:rshared
       # Will echo to root-owned authorized_keys file;
       # Avoids changing local file owner
       - ./config/authorized_keys:/root/.ssh/authorized_keys_mount
@@ -56,7 +56,7 @@ services:
         - ${JUPYTER_PORT_HOST:-8888}:${JUPYTER_PORT:-8888}
         # Rclone webserver for interactive configuration
         - ${RCLONE_PORT_HOST:-53682}:53682
-   
+    env_file: app.env
     environment:
         # Don't enclose values in quotes
         - AUTO_UPDATE=${AUTO_UPDATE:-true}
@@ -67,6 +67,7 @@ services:
         - DIRECT_ADDRESS_GET_WAN=${DIRECT_ADDRESS_GET_WAN:-false}
         - SSH_PORT=${SSH_PORT:-22}
         - WORKSPACE=${WORKSPACE:-/workspace}
+        - WORKSPACE_HOST=${WORKSPACE_HOST:-./workspace}
         - WORKSPACE_SYNC=${WORKSPACE_SYNC:-true}
         - CF_TUNNEL_TOKEN=${CF_TUNNEL_TOKEN:-}
         - CF_QUICK_TUNNELS=${CF_QUICK_TUNNELS:-true}
@@ -75,3 +76,9 @@ services:
         - WEB_USER=${WEB_USER:-user}
         - WEB_PASSWORD=${WEB_PASSWORD:-true}
         # - PROVISIONING_SCRIPT=${PROVISIONING_SCRIPT:-}
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            capabilities: [gpu]
