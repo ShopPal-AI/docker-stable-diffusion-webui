@@ -1,0 +1,20 @@
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: stable-diffusion-webui-timeout-config
+spec:
+  timeoutSec: 1200
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stable-diffusion-webui
+  annotations:
+    cloud.google.com/neg: '{"ingress": true}'
+    cloud.google.com/backend-config: '{"default": "stable-diffusion-webui-timeout-config"}'
+spec:
+  ports:
+    - port: 80
+      targetPort: 5002
+  selector:
+    app: stable-diffusion-webui

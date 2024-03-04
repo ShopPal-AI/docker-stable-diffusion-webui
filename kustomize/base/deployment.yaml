@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stable-diffusion-webui-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stable-diffusion-webui
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: ${MAX_UNAVAILABLE_DREAMPAL_ROLLING_UPDATE}
+      maxSurge: ${MAX_SURGE_DREAMPAL_ROLLING_UPDATE}
+  template:
+    metadata:
+      labels:
+        app: stable-diffusion-webui
+    spec:
+      nodeSelector:
+        cloud.google.com/gke-accelerator: nvidia-l4
+      containers:
+      - name: stable-diffusion-webui
+        image: "ghcr.io/ai-dock/stable-diffusion-webui:latest-cuda"
+        ports:
+        - containerPort: 7860
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 7860
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        resources:
+          requests:
+            memory: "10Gi"
+            nvidia.com/gpu: 1
+            cpu: "3"
+          limits:
+            nvidia.com/gpu: 1
+        env:
+        - name: WEBUI_PORT
+          value: "7860"
+        - name: WEBUI_BRANCH
+          value: "master"
+        - name: WEB_ENABLE_AUTH
+          value: "false"
+        - name: WEBUI_FLAGS
+          value: "--listen --no-half --disable-safe-unpickle --enable-insecure-extension-access --api "
+        volumeMounts:
+        - name: sa-secret-volume
+          mountPath: /sa-secrets/
+          readOnly: true
+        - name: filestore-volume
+          mountPath: /shoppal_models/
+      volumes:
+      - name: sa-secret-volume
+        secret:
+          secretName: hey-jerry-tts-secret
+      - name: filestore-volume
+        persistentVolumeClaim:
+          claimName: dreampal-filestore-pvc
+      imagePullSecrets:
+      - name: ghcr-secret

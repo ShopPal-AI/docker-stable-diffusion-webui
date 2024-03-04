@@ -1,0 +1,13 @@
+# overlays/staging/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+
+labels:
+- includeSelectors: true
+  pairs:
+    env: production
+
+patches:
+  - path: patch-deployment.yaml

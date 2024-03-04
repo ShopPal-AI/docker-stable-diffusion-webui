@@ -1,0 +1,96 @@
+name: Continous Integration & Deployment
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+      - 'v*.*.*-dev'
+      - 'v*.*.*-dev.*'
+      - 'v*.*.*-alpha'
+      - 'v*.*.*-alpha.*'
+      - 'v*.*.*-beta'
+      - 'v*.*.*-beta.*'
+    
+
+env:
+  # Use docker.io for Docker Hub if empty
+  REGISTRY: ghcr.io
+  # github.repository as <account>/<repo>
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # build-and-push-app-image:
+  #   uses: ShopPal-AI/shoppal-actions/.github/workflows/build-and-push-image.yml@main
+  #   permissions:
+  #     contents: read
+  #     packages: write
+  #     # This is used to complete the identity challenge
+  #     # with sigstore/fulcio when running outside of PRs.
+  #     id-token: write
+  #   secrets: inherit
+  #   with: 
+  #     runner_name: ubuntu-large 
+
+  deploy-to-dev:
+    if: startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-alpha')
+    # needs: build-and-push-app-image 
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read  
+    environment: dev
+    env:
+      # composite action will checkout and change the working directory, so the output env file should use absolute path
+      ENV_FILE: /tmp/docker-stable-diffusion-webui.env
+    steps:    
+    - id: 'generate-env'
+      run: |
+        touch ${{ env.ENV_FILE }}
+        echo 'tag: latest-cuda'
+    - id: 'deploy-to-gke'
+      uses: ShopPal-AI/shoppal-actions/gke-deployment@main
+      with:
+        repo_name: docker-stable-diffusion-webui 
+        env_file: ${{ env.ENV_FILE }}
+        gcp_project_id: ${{ vars.DEV_GCP_PROJECT }}
+        gke_location: us-central1
+        gke_cluster: dreampal-cluster-dev
+        gke_namespace: default
+        deployment_name: stable-diffusion-webui-deployment
+        image_to_deploy: ghcr.io/ai-dock/stable-diffusion-webui:latest-cuda
+        image_tag_to_deploy: latest-cuda
+        gke_sa_key: ${{ secrets.DEV_DEPLOYMENT_GKE_SA_KEY }}
+        FEISHU_CUSTOMERBOT_WEBHOOK: ${{ secrets.FEISHU_CUSTOMERBOT_WEBHOOK }}
+        FEISHU_CUSTOMERBOT_SECRET: ${{ secrets.FEISHU_CUSTOMERBOT_SECRET }}
+
+  deploy-to-staging:
+    if: startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-beta')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read  
+    environment: staging
+    env:
+      # composite action will checkout and change the working directory, so the output env file should use absolute path
+      ENV_FILE: /tmp/docker-stable-diffusion-webui.env
+    steps:    
+    - id: 'generate-env'
+      run: |
+        touch ${{ env.ENV_FILE }}
+        echo 'tag: latest-cuda'
+    - id: 'deploy-to-gke'
+      uses: ShopPal-AI/shoppal-actions/gke-deployment@main
+      with:
+        repo_name: docker-stable-diffusion-webui 
+        env_file: ${{ env.ENV_FILE }}
+        gcp_project_id: ${{ vars.STAGING_GCP_PROJECT }}
+        gke_location: us-central1
+        gke_cluster: dreampal-cluster-staging
+        gke_namespace: default
+        deployment_name: stable-diffusion-webui-deployment
+        image_to_deploy: ghcr.io/ai-dock/stable-diffusion-webui:latest-cuda
+        image_tag_to_deploy: latest-cuda
+        gke_sa_key: ${{ secrets.STAGING_DEPLOYMENT_GKE_SA_KEY }}
+        FEISHU_CUSTOMERBOT_WEBHOOK: ${{ secrets.FEISHU_CUSTOMERBOT_WEBHOOK }}
+        FEISHU_CUSTOMERBOT_SECRET: ${{ secrets.FEISHU_CUSTOMERBOT_SECRET }}
+        environment: staging

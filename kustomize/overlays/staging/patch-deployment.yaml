@@ -1,0 +1,11 @@
+# patch-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stable-diffusion-webui-deployment
+spec:
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 2
+      maxSurge: 2
