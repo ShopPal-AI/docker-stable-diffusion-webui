@@ -7,9 +7,9 @@ services:
       args:
         IMAGE_BASE: ${IMAGE_BASE:-ghcr.io/ai-dock/jupyter-pytorch:latest-cuda}
       tags:
-        - "ghcr.io/shoppal-ai/docker-stable-diffusion-webui:${IMAGE_TAG:-latest-jupyter}"
+        - "ghcr.io/starquest-ai/docker-stable-diffusion-webui:${IMAGE_TAG:-latest-jupyter}"
         
-    image: ghcr.io/shoppal-ai/docker-stable-diffusion-webui:${IMAGE_TAG:-latest-jupyter}
+    image: ghcr.io/starquest-ai/docker-stable-diffusion-webui:${IMAGE_TAG:-latest-jupyter}
     
     security_opt:
       # For Rclone mount
