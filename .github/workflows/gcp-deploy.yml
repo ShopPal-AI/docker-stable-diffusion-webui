@@ -48,7 +48,7 @@ jobs:
         touch ${{ env.ENV_FILE }}
         echo 'tag: latest-cuda'
     - id: 'deploy-to-gke'
-      uses: ShopPal-AI/shoppal-actions/gke-deployment@main
+      uses: StarQuest-AI/shoppal-actions/gke-deployment@main
       with:
         repo_name: docker-stable-diffusion-webui 
         env_file: ${{ env.ENV_FILE }}
@@ -79,7 +79,7 @@ jobs:
         touch ${{ env.ENV_FILE }}
         echo 'tag: latest-cuda'
     - id: 'deploy-to-gke'
-      uses: ShopPal-AI/shoppal-actions/gke-deployment@main
+      uses: StarQuest-AI/shoppal-actions/gke-deployment@main
       with:
         repo_name: docker-stable-diffusion-webui 
         env_file: ${{ env.ENV_FILE }}
